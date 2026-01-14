@@ -2,6 +2,16 @@ name: Deploy Infrastructure
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
   push:
     paths:
       - 'infra/**'
@@ -9,6 +19,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
     permissions:
       id-token: write
       contents: read
@@ -17,7 +28,65 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      # TODO: Add azure/login@v2 with OIDC
-      # TODO: Add bicep build step
-      # TODO: Add deployment what-if step
-      # TODO: Add deployment create step
+      - name: Azure Login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Install Bicep CLI
+        run: |
+          az bicep install
+          az bicep version
+      
+      - name: Build Bicep template
+        run: |
+          az bicep build --file infra/main.bicep
+      
+      - name: Create resource group if not exists
+        run: |
+          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
+          LOCATION=$(jq -r '.parameters.location.value // "westeurope"' infra/parameters/main.parameters.json)
+          
+          if ! az group show --name "$RG_NAME" &> /dev/null; then
+            echo "Creating resource group: $RG_NAME in $LOCATION"
+            az group create --name "$RG_NAME" --location "$LOCATION"
+          else
+            echo "Resource group $RG_NAME already exists"
+          fi
+      
+      - name: Deployment what-if
+        run: |
+          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
+          
+          az deployment group what-if \
+            --resource-group "$RG_NAME" \
+            --template-file infra/main.bicep \
+            --parameters @infra/parameters/main.parameters.json
+      
+      - name: Deploy infrastructure
+        run: |
+          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
+          
+          az deployment group create \
+            --name "infra-deployment-$(date +%Y%m%d-%H%M%S)" \
+            --resource-group "$RG_NAME" \
+            --template-file infra/main.bicep \
+            --parameters @infra/parameters/main.parameters.json \
+            --query properties.outputs \
+            --output json | tee deployment-outputs.json
+      
+      - name: Display deployment outputs
+        run: |
+          echo "## Deployment Outputs" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+          cat deployment-outputs.json >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload deployment outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-outputs
+          path: deployment-outputs.json
+          retention-days: 30

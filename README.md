@@ -34,6 +34,8 @@ This repository contains a **React** frontend and **FastAPI** backend applicatio
 ├── apim/                           # API Management policies and definitions
 │   ├── policies/                   # APIM policy files
 │   └── api-definition.yaml         # OpenAPI specification
+├── scripts/                        # Setup and automation scripts
+│   └── setup-oidc-credentials.sh   # GitHub OIDC configuration
 └── .github/workflows/              # CI/CD pipelines
 ```
 
@@ -65,6 +67,31 @@ This repository contains a **React** frontend and **FastAPI** backend applicatio
 - Local tools: `az`, `bicep`, `docker`, `node`, `python3`
 
 ## Getting Started
+
+### 1. Set up GitHub OIDC for Azure
+
+Before deploying infrastructure, configure GitHub Actions to authenticate to Azure using OIDC (no secrets required):
+
+```bash
+# Run the setup script
+./scripts/setup-oidc-credentials.sh <github-org> <github-repo> <environment> <resource-group-name>
+
+# Example:
+./scripts/setup-oidc-credentials.sh fjgomariz fd-fb-apim dev rg-sample-privapp-weu
+```
+
+See [scripts/README.md](scripts/README.md) for detailed setup instructions.
+
+### 2. Configure GitHub Secrets
+
+Add the output values from the setup script as GitHub repository secrets:
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+
+### 3. Deploy Infrastructure
+
+Once OIDC is configured, use GitHub Actions workflows to deploy infrastructure and applications.
 
 See [.github/copilot-instructions.md](.github/copilot-instructions.md) for detailed implementation guidance and step-by-step prompts for each task.
 

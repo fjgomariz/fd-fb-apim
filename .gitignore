@@ -220,3 +220,7 @@ build/
 
 # Bicep build output
 *.json.bak
+
+# Bicep compiled ARM templates (generated from .bicep files)
+infra/**/*.json
+!infra/parameters/**/*.json

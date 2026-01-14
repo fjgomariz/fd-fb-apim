@@ -3,6 +3,8 @@ name: Deploy Infrastructure
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - 'infra/**'
 
@@ -33,36 +35,37 @@ jobs:
         run: |
           az bicep build --file infra/main.bicep
       
+      - name: Get configuration
+        run: |
+          echo "RESOURCE_GROUP=${{ vars.AZURE_RESOURCE_GROUP }}" >> $GITHUB_ENV
+          LOCATION=$(jq -r '.parameters.location.value // "westeurope"' infra/parameters/main.parameters.json)
+          echo "LOCATION=$LOCATION" >> $GITHUB_ENV
+      
       - name: Create resource group if not exists
         run: |
-          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
-          LOCATION=$(jq -r '.parameters.location.value // "westeurope"' infra/parameters/main.parameters.json)
-          
-          if ! az group show --name "$RG_NAME" &> /dev/null; then
-            echo "Creating resource group: $RG_NAME in $LOCATION"
-            az group create --name "$RG_NAME" --location "$LOCATION"
+          if ! az group show --name "$RESOURCE_GROUP" &> /dev/null; then
+            echo "Creating resource group: $RESOURCE_GROUP in $LOCATION"
+            az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
           else
-            echo "Resource group $RG_NAME already exists"
+            echo "Resource group $RESOURCE_GROUP already exists"
           fi
       
       - name: Deployment what-if
         run: |
-          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
-          
           az deployment group what-if \
-            --resource-group "$RG_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
             --template-file infra/main.bicep \
-            --parameters @infra/parameters/main.parameters.json
+            --parameters @infra/parameters/main.parameters.json \
+            --parameters resourceGroupName="$RESOURCE_GROUP"
       
       - name: Deploy infrastructure
         run: |
-          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
-          
           az deployment group create \
             --name "infra-deployment-$(date +%Y%m%d-%H%M%S)" \
-            --resource-group "$RG_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
             --template-file infra/main.bicep \
             --parameters @infra/parameters/main.parameters.json \
+            --parameters resourceGroupName="$RESOURCE_GROUP" \
             --query properties.outputs \
             --output json | tee deployment-outputs.json
       

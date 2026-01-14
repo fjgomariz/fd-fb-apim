@@ -2,6 +2,9 @@
 targetScope = 'subscription'
 
 // ===== Parameters =====
+@description('The name of the resource group to deploy resources into')
+param resourceGroupName string
+
 @description('The Azure region for all resources')
 param location string = 'westeurope'
 
@@ -15,18 +18,17 @@ param environment string = 'dev'
 
 @description('Resource naming configuration')
 param names object = {
-  resourceGroup: 'rg-sample-privapp-weu'
-  acr: 'acrprivappweu'
-  frontendApp: 'weu-privapp-frontend'
-  backendApp: 'weu-privapp-backend'
-  storage: 'stprivappweu'
-  apim: 'apim-privapp-weu'
-  frontdoor: 'fd-privapp-weu'
-  insights: 'appi-privapp-weu'
-  law: 'law-privapp-weu'
-  kv: 'kv-privapp-weu'
-  vnet: 'vnet-privapp-weu'
-  appServicePlan: 'asp-privapp-weu'
+  acr: 'fdfbapim'
+  frontendApp: 'fd-fb-apim-frontend'
+  backendApp: 'fd-fb-apim-backend'
+  storage: 'fdfbapim'
+  apim: 'fd-fb-apim'
+  frontdoor: 'fd-fb-apim'
+  insights: 'fd-fb-apim'
+  law: 'fd-fb-apim'
+  kv: 'fd-fb-apim'
+  vnet: 'fd-fb-apim'
+  appServicePlan: 'fd-fb-apim'
 }
 
 @description('APIM publisher email')
@@ -60,7 +62,7 @@ param tags object = {
 module resourceGroup 'modules/rg.bicep' = {
   name: 'rg-deployment'
   params: {
-    name: names.resourceGroup
+    name: resourceGroupName
     location: location
     tags: tags
   }

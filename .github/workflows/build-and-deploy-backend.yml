@@ -3,12 +3,14 @@ name: Build and Deploy Backend
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - 'src/backend/**'
 
 env:
   IMAGE_NAME: backend
-  ACR_NAME: acrprivappweu  # Update this to match your ACR name from parameters
+  ACR_NAME: fdfbapim  # Update this to match your ACR name from parameters
 
 jobs:
   build-and-deploy:
@@ -31,7 +33,7 @@ jobs:
       - name: Get ACR name from deployment
         id: get-acr
         run: |
-          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
+          RG_NAME="${{ vars.AZURE_RESOURCE_GROUP }}"
           ACR_NAME=$(az acr list --resource-group "$RG_NAME" --query "[0].name" -o tsv)
           
           if [ -z "$ACR_NAME" ]; then
@@ -83,8 +85,8 @@ jobs:
       
       - name: Update Web App container configuration
         run: |
-          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
-          WEBAPP_NAME=$(jq -r '.parameters.names.value.backendApp // "weu-privapp-backend"' infra/parameters/main.parameters.json)
+          RG_NAME="${{ vars.AZURE_RESOURCE_GROUP }}"
+          WEBAPP_NAME=$(jq -r '.parameters.names.value.backendApp // "fd-fb-apim-backend"' infra/parameters/main.parameters.json)
           ACR_LOGIN_SERVER="${{ steps.get-acr.outputs.acr-name }}.azurecr.io"
           IMAGE_TAG="${ACR_LOGIN_SERVER}/${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.short-sha }}"
           
@@ -101,8 +103,8 @@ jobs:
       
       - name: Restart Web App
         run: |
-          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
-          WEBAPP_NAME=$(jq -r '.parameters.names.value.backendApp // "weu-privapp-backend"' infra/parameters/main.parameters.json)
+          RG_NAME="${{ vars.AZURE_RESOURCE_GROUP }}"
+          WEBAPP_NAME=$(jq -r '.parameters.names.value.backendApp // "fd-fb-apim-backend"' infra/parameters/main.parameters.json)
           
           az webapp restart \
             --name "$WEBAPP_NAME" \
@@ -112,8 +114,8 @@ jobs:
       
       - name: Deployment summary
         run: |
-          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
-          WEBAPP_NAME=$(jq -r '.parameters.names.value.backendApp // "weu-privapp-backend"' infra/parameters/main.parameters.json)
+          RG_NAME="${{ vars.AZURE_RESOURCE_GROUP }}"
+          WEBAPP_NAME=$(jq -r '.parameters.names.value.backendApp // "fd-fb-apim-backend"' infra/parameters/main.parameters.json)
           ACR_LOGIN_SERVER="${{ steps.get-acr.outputs.acr-name }}.azurecr.io"
           IMAGE_TAG="${ACR_LOGIN_SERVER}/${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.short-sha }}"
           

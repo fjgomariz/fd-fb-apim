@@ -1,0 +1,19 @@
+<!-- Backend API policy with JWT validation and header enrichment -->
+<policies>
+    <inbound>
+        <base />
+        <!-- TODO: Add validate-jwt policy -->
+        <!-- TODO: Extract userId from 'oid' claim -->
+        <!-- TODO: Extract guestTenantId from 'idp' claim -->
+        <!-- TODO: Set x-user-id and x-guest-tenant-id headers -->
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

@@ -1,0 +1,23 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'infra/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # TODO: Add azure/login@v2 with OIDC
+      # TODO: Add bicep build step
+      # TODO: Add deployment what-if step
+      # TODO: Add deployment create step

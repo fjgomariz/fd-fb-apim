@@ -223,7 +223,7 @@ SPA_APP_ID=$(az ad app create --display-name "privapp-frontend" --query appId -o
 **Goal**: `deploy-infra.yml` that logs in with OIDC, runs `bicep what-if`, then `az deployment group create`.
 
 **Prompt for Copilot**:
-> *Create `.github/workflows/deploy-infra.yml` that: uses `azure/login@v2` with OIDC, runs `az bicep build`, validates with `what-if`, and deploys `infra/main.bicep` with parameter file. Make it idempotent and environment-aware (env: dev).* 
+> *Create `.github/workflows/deploy-infra.yml` that: uses `azure/login@v2` with OIDC, runs `az bicep build`, validates with `what-if`, and deploys `infra/main.bicep` with parameter file. *
 
 **Acceptance**:
 - Workflow runs successfully and produces outputs

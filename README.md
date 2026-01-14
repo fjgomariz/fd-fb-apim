@@ -73,10 +73,10 @@ This repository contains a **React** frontend and **FastAPI** backend applicatio
 Run the setup script to configure Azure authentication:
 
 ```bash
-./scripts/setup-oidc.sh fjgomariz fd-fb-apim rg-sample-privapp-weu
+./scripts/setup-oidc.sh fjgomariz fd-fb-apim rg-fd-fb-apim
 ```
 
-### 2. Add GitHub Secrets
+### 2. Add GitHub Secrets and Variables
 
 Add the three secrets output by the script to your GitHub repository:
 - `AZURE_CLIENT_ID`
@@ -84,6 +84,11 @@ Add the three secrets output by the script to your GitHub repository:
 - `AZURE_SUBSCRIPTION_ID`
 
 Go to: `https://github.com/fjgomariz/fd-fb-apim/settings/secrets/actions`
+
+Also add the following **repository variable** (not a secret):
+- `AZURE_RESOURCE_GROUP` - The name of the resource group where infrastructure will be deployed (e.g., `rg-fd-fb-apim`)
+
+Go to: `https://github.com/fjgomariz/fd-fb-apim/settings/variables/actions`
 
 ### 3. Deploy Infrastructure
 

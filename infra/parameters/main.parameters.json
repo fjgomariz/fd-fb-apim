@@ -10,18 +10,17 @@
     },
     "names": {
       "value": {
-        "resourceGroup": "rg-sample-privapp-weu",
-        "acr": "acrprivappweu",
-        "frontendApp": "weu-privapp-frontend",
-        "backendApp": "weu-privapp-backend",
-        "storage": "stprivappweu",
-        "apim": "apim-privapp-weu",
-        "frontdoor": "fd-privapp-weu",
-        "insights": "appi-privapp-weu",
-        "law": "law-privapp-weu",
-        "kv": "kv-privapp-weu",
-        "vnet": "vnet-privapp-weu",
-        "appServicePlan": "asp-privapp-weu"
+        "acr": "fdfbapim",
+        "frontendApp": "fd-fb-apim-frontend",
+        "backendApp": "fd-fb-apim-backend",
+        "storage": "fdfbapim",
+        "apim": "fd-fb-apim",
+        "frontdoor": "fd-fb-apim",
+        "insights": "fd-fb-apim",
+        "law": "fd-fb-apim",
+        "kv": "fd-fb-apim",
+        "vnet": "fd-fb-apim",
+        "appServicePlan": "fd-fb-apim"
       }
     },
     "apimPublisherEmail": {

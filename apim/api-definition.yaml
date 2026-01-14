@@ -1,0 +1,24 @@
+openapi: 3.0.0
+info:
+  title: Private App Backend API
+  version: 1.0.0
+  description: Backend API for file upload and listing
+
+paths:
+  /files/upload:
+    post:
+      summary: Upload a file
+      description: Upload a file to Azure Blob Storage
+      # TODO: Add request/response definitions
+      responses:
+        '200':
+          description: File uploaded successfully
+
+  /files/list:
+    get:
+      summary: List files
+      description: List all files in Azure Blob Storage
+      # TODO: Add response definitions
+      responses:
+        '200':
+          description: List of files

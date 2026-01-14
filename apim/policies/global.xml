@@ -1,0 +1,16 @@
+<!-- Global APIM policy -->
+<policies>
+    <inbound>
+        <base />
+        <!-- TODO: Add global inbound policies -->
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

@@ -34,6 +34,8 @@ This repository contains a **React** frontend and **FastAPI** backend applicatio
 ├── apim/                           # API Management policies and definitions
 │   ├── policies/                   # APIM policy files
 │   └── api-definition.yaml         # OpenAPI specification
+├── scripts/                        # Setup and automation scripts
+│   └── setup-oidc-credentials.sh   # GitHub OIDC configuration
 └── .github/workflows/              # CI/CD pipelines
 ```
 
@@ -66,7 +68,31 @@ This repository contains a **React** frontend and **FastAPI** backend applicatio
 
 ## Getting Started
 
-See [.github/copilot-instructions.md](.github/copilot-instructions.md) for detailed implementation guidance and step-by-step prompts for each task.
+### 1. Set up GitHub OIDC for Azure
+
+Run the setup script to configure Azure authentication:
+
+```bash
+./scripts/setup-oidc.sh fjgomariz fd-fb-apim rg-sample-privapp-weu
+```
+
+### 2. Add GitHub Secrets
+
+Add the three secrets output by the script to your GitHub repository:
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+
+Go to: `https://github.com/fjgomariz/fd-fb-apim/settings/secrets/actions`
+
+### 3. Deploy Infrastructure
+
+Use the GitHub Actions workflows to deploy:
+- `deploy-infra.yml` - Deploy Azure infrastructure
+- `build-and-deploy-frontend.yml` - Build and deploy frontend
+- `build-and-deploy-backend.yml` - Build and deploy backend
+
+See [scripts/README.md](scripts/README.md) for more details.
 
 ## Cost Considerations
 

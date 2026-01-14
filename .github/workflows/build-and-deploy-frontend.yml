@@ -6,6 +6,10 @@ on:
     paths:
       - 'src/frontend/**'
 
+env:
+  IMAGE_NAME: frontend
+  ACR_NAME: acrprivappweu  # Update this to match your ACR name from parameters
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -17,7 +21,107 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      # TODO: Add azure/login@v2 with OIDC
-      # TODO: Login to ACR
-      # TODO: Build and push Docker image
-      # TODO: Update Web App container configuration
+      - name: Azure Login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Get ACR name from deployment
+        id: get-acr
+        run: |
+          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
+          ACR_NAME=$(az acr list --resource-group "$RG_NAME" --query "[0].name" -o tsv)
+          
+          if [ -z "$ACR_NAME" ]; then
+            echo "No ACR found in resource group. Using default from env."
+            ACR_NAME="${{ env.ACR_NAME }}"
+          fi
+          
+          echo "acr-name=$ACR_NAME" >> $GITHUB_OUTPUT
+          echo "ACR Name: $ACR_NAME"
+      
+      - name: Login to Azure Container Registry
+        run: |
+          az acr login --name ${{ steps.get-acr.outputs.acr-name }}
+      
+      - name: Set image tags
+        id: tags
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          
+          echo "short-sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "Image tags: latest, $SHORT_SHA, $TIMESTAMP"
+      
+      - name: Build and push Docker image
+        run: |
+          ACR_LOGIN_SERVER="${{ steps.get-acr.outputs.acr-name }}.azurecr.io"
+          IMAGE_TAG_LATEST="${ACR_LOGIN_SERVER}/${{ env.IMAGE_NAME }}:latest"
+          IMAGE_TAG_SHA="${ACR_LOGIN_SERVER}/${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.short-sha }}"
+          IMAGE_TAG_TS="${ACR_LOGIN_SERVER}/${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.timestamp }}"
+          
+          cd src/frontend
+          
+          docker build \
+            --tag "$IMAGE_TAG_LATEST" \
+            --tag "$IMAGE_TAG_SHA" \
+            --tag "$IMAGE_TAG_TS" \
+            --file Dockerfile \
+            .
+          
+          docker push "$IMAGE_TAG_LATEST"
+          docker push "$IMAGE_TAG_SHA"
+          docker push "$IMAGE_TAG_TS"
+          
+          echo "Pushed images:"
+          echo "  - $IMAGE_TAG_LATEST"
+          echo "  - $IMAGE_TAG_SHA"
+          echo "  - $IMAGE_TAG_TS"
+      
+      - name: Update Web App container configuration
+        run: |
+          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
+          WEBAPP_NAME=$(jq -r '.parameters.names.value.frontendApp // "weu-privapp-frontend"' infra/parameters/main.parameters.json)
+          ACR_LOGIN_SERVER="${{ steps.get-acr.outputs.acr-name }}.azurecr.io"
+          IMAGE_TAG="${ACR_LOGIN_SERVER}/${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.short-sha }}"
+          
+          echo "Updating Web App: $WEBAPP_NAME"
+          echo "New image: $IMAGE_TAG"
+          
+          az webapp config container set \
+            --name "$WEBAPP_NAME" \
+            --resource-group "$RG_NAME" \
+            --docker-custom-image-name "$IMAGE_TAG" \
+            --docker-registry-server-url "https://$ACR_LOGIN_SERVER"
+          
+          echo "Container configuration updated successfully"
+      
+      - name: Restart Web App
+        run: |
+          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
+          WEBAPP_NAME=$(jq -r '.parameters.names.value.frontendApp // "weu-privapp-frontend"' infra/parameters/main.parameters.json)
+          
+          az webapp restart \
+            --name "$WEBAPP_NAME" \
+            --resource-group "$RG_NAME"
+          
+          echo "Web App restarted successfully"
+      
+      - name: Deployment summary
+        run: |
+          RG_NAME=$(jq -r '.parameters.names.value.resourceGroup // "rg-sample-privapp-weu"' infra/parameters/main.parameters.json)
+          WEBAPP_NAME=$(jq -r '.parameters.names.value.frontendApp // "weu-privapp-frontend"' infra/parameters/main.parameters.json)
+          ACR_LOGIN_SERVER="${{ steps.get-acr.outputs.acr-name }}.azurecr.io"
+          IMAGE_TAG="${ACR_LOGIN_SERVER}/${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.short-sha }}"
+          
+          echo "## Frontend Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web App**: $WEBAPP_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "- **Resource Group**: $RG_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "- **Container Image**: \`$IMAGE_TAG\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git SHA**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployment completed successfully" >> $GITHUB_STEP_SUMMARY

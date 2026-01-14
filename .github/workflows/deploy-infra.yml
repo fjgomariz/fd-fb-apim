@@ -2,16 +2,6 @@ name: Deploy Infrastructure
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - staging
-          - prod
   push:
     paths:
       - 'infra/**'
@@ -19,7 +9,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'dev' }}
     permissions:
       id-token: write
       contents: read

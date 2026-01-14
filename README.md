@@ -70,36 +70,29 @@ This repository contains a **React** frontend and **FastAPI** backend applicatio
 
 ### 1. Set up GitHub OIDC for Azure
 
-Before deploying infrastructure, configure GitHub Actions to authenticate to Azure using OIDC (no secrets required):
+Run the setup script to configure Azure authentication:
 
 ```bash
-# Run the setup script
-./scripts/setup-oidc-credentials.sh <github-org> <github-repo> <environment> <resource-group-name>
-
-# Example:
-./scripts/setup-oidc-credentials.sh fjgomariz fd-fb-apim dev rg-sample-privapp-weu
+./scripts/setup-oidc.sh fjgomariz fd-fb-apim rg-sample-privapp-weu
 ```
 
-**📚 Documentation:**
-- **Quick Start**: [QUICKSTART-OIDC.md](QUICKSTART-OIDC.md) - 3-step setup guide
-- **Detailed Guide**: [.github/OIDC-SETUP.md](.github/OIDC-SETUP.md) - Complete setup instructions
-- **Flow Diagram**: [.github/OIDC-FLOW.md](.github/OIDC-FLOW.md) - Visual authentication flow
-- **Script Reference**: [scripts/README.md](scripts/README.md) - Script documentation
+### 2. Add GitHub Secrets
 
-See [scripts/README.md](scripts/README.md) for detailed setup instructions.
-
-### 2. Configure GitHub Secrets
-
-Add the output values from the setup script as GitHub repository secrets:
+Add the three secrets output by the script to your GitHub repository:
 - `AZURE_CLIENT_ID`
 - `AZURE_TENANT_ID`
 - `AZURE_SUBSCRIPTION_ID`
 
+Go to: `https://github.com/fjgomariz/fd-fb-apim/settings/secrets/actions`
+
 ### 3. Deploy Infrastructure
 
-Once OIDC is configured, use GitHub Actions workflows to deploy infrastructure and applications.
+Use the GitHub Actions workflows to deploy:
+- `deploy-infra.yml` - Deploy Azure infrastructure
+- `build-and-deploy-frontend.yml` - Build and deploy frontend
+- `build-and-deploy-backend.yml` - Build and deploy backend
 
-See [.github/copilot-instructions.md](.github/copilot-instructions.md) for detailed implementation guidance and step-by-step prompts for each task.
+See [scripts/README.md](scripts/README.md) for more details.
 
 ## Cost Considerations
 

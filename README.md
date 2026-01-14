@@ -80,6 +80,12 @@ Before deploying infrastructure, configure GitHub Actions to authenticate to Azu
 ./scripts/setup-oidc-credentials.sh fjgomariz fd-fb-apim dev rg-sample-privapp-weu
 ```
 
+**📚 Documentation:**
+- **Quick Start**: [QUICKSTART-OIDC.md](QUICKSTART-OIDC.md) - 3-step setup guide
+- **Detailed Guide**: [.github/OIDC-SETUP.md](.github/OIDC-SETUP.md) - Complete setup instructions
+- **Flow Diagram**: [.github/OIDC-FLOW.md](.github/OIDC-FLOW.md) - Visual authentication flow
+- **Script Reference**: [scripts/README.md](scripts/README.md) - Script documentation
+
 See [scripts/README.md](scripts/README.md) for detailed setup instructions.
 
 ### 2. Configure GitHub Secrets
